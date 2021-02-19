@@ -30,6 +30,7 @@
 		5A5AB41C25DB498C00167566 /* O0g.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = O0g.log; sourceTree = "<group>"; };
 		5A5AB41D25DB49E100167566 /* Ofastg.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = Ofastg.log; sourceTree = "<group>"; };
 		5A5AB41E25DB4C4C00167566 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		5A5AB41F25DCC06700167566 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,6 +47,7 @@
 		5A5AB40225DA198200167566 = {
 			isa = PBXGroup;
 			children = (
+				5A5AB41F25DCC06700167566 /* README.md */,
 				5A5AB40D25DA198200167566 /* CF.TimingsHighResC01 */,
 				5A5AB40C25DA198200167566 /* Products */,
 			);

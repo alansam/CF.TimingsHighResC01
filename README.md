@@ -1,8 +1,9 @@
 # CF.TimingsHighResC01
 
 A sample program to compare time differences between [`malloc()`](https://www.manpagez.com/man/3/malloc/),
-`malloc()` plus [`memset()`](https://www.manpagez.com/man/3/memset/) and [`calloc()`](https://www.manpagez.com/man/3/calloc/). The time differences are
-calculated using the [`clock_gettime()`](https://www.manpagez.com/man/3/clock_gettime/) high&ndash;resolution timing functions.
+`malloc()` plus [`memset()`](https://www.manpagez.com/man/3/memset/) , [`calloc()`](https://www.manpagez.com/man/3/calloc/),
+[`mmap()`](https://www.manpagez.com/man/2/mmap/) and `mmap()` plus `memset()`.
+The time differences are calculated using the [`clock_gettime()`](https://www.manpagez.com/man/3/clock_gettime/) high&ndash;resolution timing functions.
 
 The program sets up the timers and constructs a series of loops containing calls the memory allocation functions. When a loop terminates the time
 difference is calculated and the results are displayed to nanosecond precision.

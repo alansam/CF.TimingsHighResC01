@@ -6,6 +6,11 @@
 //
 //  MARK: - Reference.
 //  @see: https://www.manpagez.com/man/3/clock_gettime/
+//  @see: https://www.manpagez.com/man/3/malloc/
+//  @see: https://www.manpagez.com/man/3/calloc/
+//  @see: https://www.manpagez.com/man/3/memset/
+//  @see: https://www.manpagez.com/man/2/mmap/
+//  @see: https://www.manpagez.com/man/2/munmap/
 //
 
 #include <stdio.h>
@@ -14,6 +19,11 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include <err.h>
 
 #define MACRO_NAME(x) #x
 
@@ -25,6 +35,7 @@ timespec diff(timespec start, timespec end);
 int driver(int argc, const char * argv[]);
 
 void ff0(void);
+void ff2(void);
 
 /*
  *  MARK: main()
@@ -137,61 +148,198 @@ void ff0(void) {
       target = NULL;
 
       //  TODO: test malloc
-      clock_gettime(bobby.clkid, &time_bgn);
-      for (size_t i_ = 0; i_ < test_loops; ++i_) {
-        if (target != NULL) { free(target); }
-        target = malloc(max_getmain);
-      }
-      clock_gettime(bobby.clkid, &time_end);
-      time_dif = diff(time_bgn, time_end);
-      printf("%20s %5ld:%09ld\n", "malloc", time_dif.tv_sec, time_dif.tv_nsec);
+      {
+        clock_gettime(bobby.clkid, &time_bgn);
+        for (size_t i_ = 0; i_ < test_loops; ++i_) {
+          if (target != NULL) { free(target); }
+          target = malloc(max_getmain);
+        }
+        clock_gettime(bobby.clkid, &time_end);
+        time_dif = diff(time_bgn, time_end);
+        printf("%20s %5ld:%09ld\n", "malloc", time_dif.tv_sec, time_dif.tv_nsec);
+        // what did we get?
+        uint64_t tt0;
+        uint64_t tt1;
+        memcpy(&tt0, target, sizeof tt0);
+        memcpy(&tt1, target + 1024 / 2, sizeof tt1);
+        printf("data at address: %p %016llx\n", target, tt0);
+        printf("data at address: %p %016llx\n", target + 1024 / 2, tt1);
 
-      // hoefully this stops the optimizer from bypassing the code
-      memset(target, 0x80, max_getmain);
-      x80 = *target + 1024 / 2;
-      memset(target, 0x40, max_getmain);
-      x40 = *target + 1024 / 2;
-      printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
-      free(target);
-      target = NULL;
-
-      //  TODO: test malloc,memset
-      clock_gettime(bobby.clkid, &time_bgn);
-      for (size_t i_ = 0; i_ < test_loops; ++i_) {
-        if (target != NULL) { free(target); }
-        target = malloc(max_getmain);
+        // hoefully this stops the optimizer from bypassing the code
         memset(target, 0x80, max_getmain);
+        x80 = *target + 1024 / 2;
+        memset(target, 0x40, max_getmain);
+        x40 = *target + 1024 / 2;
+        printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
+        free(target);
+        target = NULL;
+        putchar('\n');
       }
-      clock_gettime(bobby.clkid, &time_end);
-      time_dif = diff(time_bgn, time_end);
-      printf("%20s %5ld:%09ld\n", "malloc,memset", time_dif.tv_sec, time_dif.tv_nsec);
 
-      x80 = *target + 1024 / 2;
-      memset(target, 0x40, max_getmain);
-      x40 = *target + 1024 / 2;
-      printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
-      free(target);
-      target = NULL;
+      {
+        //  TODO: test malloc,memset
+        clock_gettime(bobby.clkid, &time_bgn);
+        for (size_t i_ = 0; i_ < test_loops; ++i_) {
+          if (target != NULL) { free(target); }
+          target = malloc(max_getmain);
+          memset(target, 0x80, max_getmain);
+        }
+        clock_gettime(bobby.clkid, &time_end);
+        time_dif = diff(time_bgn, time_end);
+        printf("%20s %5ld:%09ld\n", "malloc,memset", time_dif.tv_sec, time_dif.tv_nsec);
+        // what did we get?
+        uint64_t tt0;
+        uint64_t tt1;
+        memcpy(&tt0, target, sizeof tt0);
+        memcpy(&tt1, target + 1024 / 2, sizeof tt1);
+        printf("data at address: %p %016llx\n", target, tt0);
+        printf("data at address: %p %016llx\n", target + 1024 / 2, tt1);
 
-      //  TODO: test calloc
-      clock_gettime(bobby.clkid, &time_bgn);
-      for (size_t i_ = 0; i_ < test_loops; ++i_) {
-        if (target != NULL) { free(target); }
-        target = calloc(sizeof(char), max_getmain);
+        x80 = *target + 1024 / 2;
+        memset(target, 0x40, max_getmain);
+        x40 = *target + 1024 / 2;
+        printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
+        free(target);
+        target = NULL;
+        putchar('\n');
+      }
+
+      {
+        //  TODO: test calloc
+        clock_gettime(bobby.clkid, &time_bgn);
+        for (size_t i_ = 0; i_ < test_loops; ++i_) {
+          if (target != NULL) { free(target); }
+          target = calloc(sizeof(char), max_getmain);
+          memset(target, 0x80, max_getmain);
+        }
+        clock_gettime(bobby.clkid, &time_end);
+        time_dif = diff(time_bgn, time_end);
+        printf("%20s %5ld:%09ld\n", "calloc", time_dif.tv_sec, time_dif.tv_nsec);
+        // what did we get?
+        uint64_t tt0;
+        uint64_t tt1;
+        memcpy(&tt0, target, sizeof tt0);
+        memcpy(&tt1, target + 1024 / 2, sizeof tt1);
+        printf("data at address: %p %016llx\n", target, tt0);
+        printf("data at address: %p %016llx\n", target + 1024 / 2, tt1);
+
+        // hoefully this stops the optimizer from bypassing the code
         memset(target, 0x80, max_getmain);
+        x80 = *target + 1024 / 2;
+        memset(target, 0x40, max_getmain);
+        x40 = *target + 1024 / 2;
+        printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
+        free(target);
+        target = NULL;
+        putchar('\n');
       }
-      clock_gettime(bobby.clkid, &time_end);
-      time_dif = diff(time_bgn, time_end);
-      printf("%20s %5ld:%09ld\n", "calloc", time_dif.tv_sec, time_dif.tv_nsec);
 
-      // hoefully this stops the optimizer from bypassing the code
-      memset(target, 0x80, max_getmain);
-      x80 = *target + 1024 / 2;
-      memset(target, 0x40, max_getmain);
-      x40 = *target + 1024 / 2;
-      printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
-      free(target);
-      target = NULL;
+      {
+        //  TODO: test mmap
+        clock_gettime(bobby.clkid, &time_bgn);
+        int prot_flags = PROT_WRITE;
+        int map_flags = MAP_PRIVATE | MAP_ANON;
+        off_t fpointer = 0ULL;
+        for (size_t i_ = 0; i_ < test_loops; ++i_) {
+          if (target != NULL) {
+            int ferr = munmap(target, max_getmain);
+            if (ferr == -1) {
+              ferr = errno;
+              errc(1, ferr,
+                   "%s attempted to unnmap %zu bytes. Error code %d",
+                   "munmap", max_getmain, ferr);
+            }
+          }
+          target = mmap(target, max_getmain, prot_flags, map_flags, (int) NULL, fpointer);
+          if (target == MAP_FAILED) {
+            int ferr = errno;
+            errc(1, ferr,
+                 "%s attempted to map %zu bytes. Error code %d",
+                 "mmap", max_getmain, ferr);
+          }
+        }
+
+        clock_gettime(bobby.clkid, &time_end);
+        time_dif = diff(time_bgn, time_end);
+        printf("%20s %5ld:%09ld\n", "mmap", time_dif.tv_sec, time_dif.tv_nsec);
+        // what did we get?
+        uint64_t tt0;
+        uint64_t tt1;
+        memcpy(&tt0, target, sizeof tt0);
+        memcpy(&tt1, target + 1024 / 2, sizeof tt1);
+        printf("data at address: %p %016llx\n", target, tt0);
+        printf("data at address: %p %016llx\n", target + 1024 / 2, tt1);
+
+        // hoefully this stops the optimizer from bypassing the code
+        memset(target, 0x80, max_getmain);
+        x80 = *target + 1024 / 2;
+        memset(target, 0x40, max_getmain);
+        x40 = *target + 1024 / 2;
+        printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
+        int ferr = munmap(target, max_getmain);
+        if (ferr == -1) {
+          ferr = errno;
+          errc(1, ferr,
+               "%s attempted to unnmap %zu bytes. Error code %d",
+               "munmap", max_getmain, ferr);
+        }
+        target = NULL;
+        putchar('\n');
+      }
+
+      {
+        //  TODO: test mmap,memset
+        clock_gettime(bobby.clkid, &time_bgn);
+        int prot_flags = PROT_WRITE;
+        int map_flags = MAP_PRIVATE | MAP_ANON;
+        off_t fpointer = 0ULL;
+        for (size_t i_ = 0; i_ < test_loops; ++i_) {
+          if (target != NULL) {
+            int ferr = munmap(target, max_getmain);
+            if (ferr == -1) {
+              ferr = errno;
+              errc(1, ferr,
+                   "%s attempted to unnmap %zu bytes. Error code %d",
+                   "munmap", max_getmain, ferr);
+            }
+          }
+          target = mmap(target, max_getmain, prot_flags, map_flags, (int) NULL, fpointer);
+          if (target == MAP_FAILED) {
+            int ferr = errno;
+            errc(1, ferr,
+                 "%s attempted to map %zu bytes. Error code %d",
+                 "mmap", max_getmain, ferr);
+          }
+          memset(target, 0x80, max_getmain);
+        }
+
+        clock_gettime(bobby.clkid, &time_end);
+        time_dif = diff(time_bgn, time_end);
+        printf("%20s %5ld:%09ld\n", "mmap,memset", time_dif.tv_sec, time_dif.tv_nsec);
+        // what did we get?
+        uint64_t tt0;
+        uint64_t tt1;
+        memcpy(&tt0, target, sizeof tt0);
+        memcpy(&tt1, target + 1024 / 2, sizeof tt1);
+        printf("data at address: %p %016llx\n", target, tt0);
+        printf("data at address: %p %016llx\n", target + 1024 / 2, tt1);
+
+        // hoefully this stops the optimizer from bypassing the code
+        memset(target, 0x80, max_getmain);
+        x80 = *target + 1024 / 2;
+        memset(target, 0x40, max_getmain);
+        x40 = *target + 1024 / 2;
+        printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
+        int ferr = munmap(target, max_getmain);
+        if (ferr == -1) {
+          ferr = errno;
+          errc(1, ferr,
+               "%s attempted to unnmap %zu bytes. Error code %d",
+               "munmap", max_getmain, ferr);
+        }
+        target = NULL;
+        putchar('\n');
+      }
     }
   }
 
