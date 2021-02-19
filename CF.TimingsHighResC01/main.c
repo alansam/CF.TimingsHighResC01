@@ -11,6 +11,7 @@
 //  @see: https://www.manpagez.com/man/3/memset/
 //  @see: https://www.manpagez.com/man/2/mmap/
 //  @see: https://www.manpagez.com/man/2/munmap/
+//  @see: https://www.manpagez.com/man/2/madvise/
 //
 
 #include <stdio.h>
@@ -236,18 +237,19 @@ void ff0(void) {
 
       {
         //  TODO: test mmap
+        int mferr;
         clock_gettime(bobby.clkid, &time_bgn);
-        int prot_flags = PROT_WRITE;
+        int prot_flags = PROT_WRITE | PROT_READ;
         int map_flags = MAP_PRIVATE | MAP_ANON;
         off_t fpointer = 0ULL;
         for (size_t i_ = 0; i_ < test_loops; ++i_) {
           if (target != NULL) {
-            int ferr = munmap(target, max_getmain);
-            if (ferr == -1) {
-              ferr = errno;
-              errc(1, ferr,
+            mferr = munmap(target, max_getmain);
+            if (mferr == -1) {
+              mferr = errno;
+              errc(1, mferr,
                    "%s attempted to unnmap %zu bytes. Error code %d",
-                   "munmap", max_getmain, ferr);
+                   "munmap", max_getmain, mferr);
             }
           }
           target = mmap(target, max_getmain, prot_flags, map_flags, (int) NULL, fpointer);
@@ -276,12 +278,12 @@ void ff0(void) {
         memset(target, 0x40, max_getmain);
         x40 = *target + 1024 / 2;
         printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
-        int ferr = munmap(target, max_getmain);
-        if (ferr == -1) {
-          ferr = errno;
-          errc(1, ferr,
+        mferr = munmap(target, max_getmain);
+        if (mferr == -1) {
+          mferr = errno;
+          errc(1, mferr,
                "%s attempted to unnmap %zu bytes. Error code %d",
-               "munmap", max_getmain, ferr);
+               "munmap", max_getmain, mferr);
         }
         target = NULL;
         putchar('\n');
@@ -289,18 +291,19 @@ void ff0(void) {
 
       {
         //  TODO: test mmap,memset
+        int mferr;
         clock_gettime(bobby.clkid, &time_bgn);
-        int prot_flags = PROT_WRITE;
+        int prot_flags = PROT_WRITE | PROT_READ;
         int map_flags = MAP_PRIVATE | MAP_ANON;
         off_t fpointer = 0ULL;
         for (size_t i_ = 0; i_ < test_loops; ++i_) {
           if (target != NULL) {
-            int ferr = munmap(target, max_getmain);
-            if (ferr == -1) {
-              ferr = errno;
-              errc(1, ferr,
+            mferr = munmap(target, max_getmain);
+            if (mferr == -1) {
+              mferr = errno;
+              errc(1, mferr,
                    "%s attempted to unnmap %zu bytes. Error code %d",
-                   "munmap", max_getmain, ferr);
+                   "munmap", max_getmain, mferr);
             }
           }
           target = mmap(target, max_getmain, prot_flags, map_flags, (int) NULL, fpointer);
@@ -309,6 +312,13 @@ void ff0(void) {
             errc(1, ferr,
                  "%s attempted to map %zu bytes. Error code %d",
                  "mmap", max_getmain, ferr);
+          }
+          mferr = madvise(target, max_getmain, MADV_SEQUENTIAL);
+          if (mferr == -1) {
+            mferr = errno;
+            errc(1, mferr,
+                 "%s attempted to advise memory use for %zu bytes. Error code %d",
+                 "madvise", max_getmain, mferr);
           }
           memset(target, 0x80, max_getmain);
         }
@@ -330,12 +340,12 @@ void ff0(void) {
         memset(target, 0x40, max_getmain);
         x40 = *target + 1024 / 2;
         printf("%p %p %02x %02x\n", target, target + 1024 / 2, x80, x40);
-        int ferr = munmap(target, max_getmain);
-        if (ferr == -1) {
-          ferr = errno;
-          errc(1, ferr,
+        mferr = munmap(target, max_getmain);
+        if (mferr == -1) {
+          mferr = errno;
+          errc(1, mferr,
                "%s attempted to unnmap %zu bytes. Error code %d",
-               "munmap", max_getmain, ferr);
+               "munmap", max_getmain, mferr);
         }
         target = NULL;
         putchar('\n');
